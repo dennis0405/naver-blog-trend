@@ -89,12 +89,6 @@ def write_daily_collection_report(
     lines.extend(
         [
             "",
-            "## Observed Title Patterns",
-            "- problem_solution: local extract required",
-            "- numbered_lessons: local extract required",
-            "- retrospective: local extract required",
-            "- comparison: local extract required",
-            "",
             "## Raw Storage",
             f"- raw_dir: {raw_date}",
             f"- naver_search_jsonl: {search_path}",
@@ -111,4 +105,3 @@ def write_daily_collection_report(
 
 def _escape_table(value: Any) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ")
-
