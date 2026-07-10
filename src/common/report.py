@@ -16,6 +16,8 @@ def write_daily_collection_report(
     derived_dir: str | Path = "data/derived",
     deleted_dirs: list[str] | None = None,
     deleted_report_files: list[str] | None = None,
+    deleted_derived_dirs: list[str] | None = None,
+    deleted_derived_rows: dict[str, int] | None = None,
 ) -> Path:
     raw_date = Path(raw_dir) / date_value
     search_path = raw_date / "naver_search.jsonl"
@@ -42,6 +44,8 @@ def write_daily_collection_report(
 
     deleted_dirs = deleted_dirs or []
     deleted_report_files = deleted_report_files or []
+    deleted_derived_dirs = deleted_derived_dirs or []
+    deleted_derived_rows = deleted_derived_rows or {}
     lines = [
         f"# Daily Naver Tech Blog Signal Report - {date_value}",
         "",
@@ -55,6 +59,8 @@ def write_daily_collection_report(
         f"- ranked_candidates: {ranked_candidate_count}",
         f"- reference_targets: {reference_target_count}",
         f"- raw_retention_deleted_dirs: {', '.join(deleted_dirs) if deleted_dirs else 'none'}",
+        f"- derived_retention_deleted_dirs: {', '.join(deleted_derived_dirs) if deleted_derived_dirs else 'none'}",
+        f"- derived_retention_deleted_rows: {_format_deleted_row_counts(deleted_derived_rows)}",
         f"- report_retention_deleted_files: {', '.join(deleted_report_files) if deleted_report_files else 'none'}",
         "- failed_queries: see errors report if present",
         "",
@@ -156,6 +162,13 @@ def write_daily_collection_report(
 
 def _escape_table(value: Any) -> str:
     return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+def _format_deleted_row_counts(values: dict[str, int]) -> str:
+    nonzero = {key: count for key, count in values.items() if count}
+    if not nonzero:
+        return "none"
+    return ", ".join(f"{key}={count}" for key, count in sorted(nonzero.items()))
 
 
 def _read_ranked_candidates(

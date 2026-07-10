@@ -54,14 +54,14 @@ class RankingTests(unittest.TestCase):
                 db_path,
                 date_value="2026-07-10",
                 targets=targets,
-                output_path=base / "data" / "derived" / "reference_targets.jsonl",
+                output_path=base / "data" / "derived" / "2026-07-10" / "reference_targets.jsonl",
             )
 
             self.assertEqual(len(targets), 1)
             self.assertEqual(targets[0]["canonical_url"], "https://blog.naver.com/dev/1?a=1&b=2")
-            target_text = (base / "data" / "derived" / "reference_targets.jsonl").read_text(
-                encoding="utf-8"
-            )
+            target_text = (
+                base / "data" / "derived" / "2026-07-10" / "reference_targets.jsonl"
+            ).read_text(encoding="utf-8")
             self.assertNotIn("body_text", target_text)
             with sqlite3.connect(db_path) as connection:
                 count = connection.execute("SELECT COUNT(*) FROM reference_targets").fetchone()[0]
@@ -89,7 +89,7 @@ class RankingTests(unittest.TestCase):
                 db_path,
                 date_value="2026-07-10",
                 targets=targets,
-                output_path=base / "data" / "derived" / "reference_targets.jsonl",
+                output_path=base / "data" / "derived" / "2026-07-10" / "reference_targets.jsonl",
             )
 
             report_path = write_daily_collection_report(

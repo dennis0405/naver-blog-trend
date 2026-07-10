@@ -35,11 +35,11 @@ jobs:
           python3 -m src.collectors.collect_naver_search --date today --layers all
           python3 -m src.collectors.collect_naver_trend --date today
           python3 -m src.collectors.fetch_blog_bodies --date today --raw-dir raw
-          python3 -m src.maintenance.prune_raw_data --raw-dir raw --keep-days 7
 
-      - name: Stage 2 - rank candidates and extract reference targets
+      - name: Stage 2 - rank candidates, extract reference targets, and prune retention
         run: |
           scripts/rank_targets_local.sh today
+          python3 -m src.maintenance.prune_raw_data --raw-dir raw --derived-dir data/derived --report-dir data/reports/daily --keep-days 7
 
       - name: Commit raw data, ranking data, and reports
         run: |

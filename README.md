@@ -35,7 +35,7 @@ This creates:
 
 ```text
 data/derived/candidates.sqlite
-data/derived/reference_targets.jsonl
+data/derived/{date}/reference_targets.jsonl
 data/reports/daily/{date}.md
 ```
 

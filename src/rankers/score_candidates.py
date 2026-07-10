@@ -106,7 +106,7 @@ def main() -> None:
         db_path,
         date_value=date_value,
         targets=targets,
-        output_path=ensure_dir(args.derived_dir) / "reference_targets.jsonl",
+        output_path=ensure_dir(Path(args.derived_dir) / date_value) / "reference_targets.jsonl",
     )
     write_daily_collection_report(
         date_value=date_value,
