@@ -1,4 +1,4 @@
-name: Daily Collect
+name: Daily Blog Pipeline
 
 on:
   schedule:
@@ -24,7 +24,7 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Collect Naver metadata and public bodies into raw directory
+      - name: Stage 1 - collect Naver metadata and public bodies
         env:
           NAVER_API_PROVIDER: ${{ secrets.NAVER_API_PROVIDER }}
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
@@ -37,10 +37,14 @@ jobs:
           python3 -m src.collectors.fetch_blog_bodies --date today --raw-dir raw
           python3 -m src.maintenance.prune_raw_data --raw-dir raw --keep-days 7
 
-      - name: Commit raw data and collection report
+      - name: Stage 2 - rank candidates and extract reference targets
+        run: |
+          scripts/rank_targets_local.sh today
+
+      - name: Commit raw data, ranking data, and reports
         run: |
           git config user.name "blog-agent-bot"
           git config user.email "blog-agent-bot@example.com"
-          git add raw data/reports || true
-          git commit -m "chore: daily naver raw collection" || echo "No changes"
+          git add raw data/reports data/derived || true
+          git commit -m "chore: daily naver blog pipeline" || echo "No changes"
           git push

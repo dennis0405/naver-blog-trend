@@ -12,8 +12,8 @@ This MVP collects Naver blog search signals across discovery and target layers, 
 
 ## Setup
 
-1. Copy `.env.example` to `.env`.
-2. Fill `NAVER_CLIENT_ID` and `NAVER_CLIENT_SECRET`.
+1. Create `.env` locally or export environment variables.
+2. Fill `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, and `NAVER_API_PROVIDER=developers`.
 3. Run collection:
 
 ```bash
@@ -22,6 +22,24 @@ python3 -m src.collectors.collect_naver_trend --date today
 python3 -m src.collectors.fetch_blog_bodies --date today --raw-dir raw
 python3 -m src.maintenance.prune_raw_data --raw-dir raw --keep-days 7
 ```
+
+## Local Ranking
+
+After raw data exists for a date, run the local ranking layer:
+
+```bash
+scripts/rank_targets_local.sh 2026-07-10
+```
+
+This creates:
+
+```text
+data/derived/candidates.sqlite
+data/derived/reference_targets.jsonl
+data/reports/daily/{date}.md
+```
+
+Ranking and reference target selection do not run metadata extraction, body style extraction, or playbook aggregation.
 
 ## Tests
 
