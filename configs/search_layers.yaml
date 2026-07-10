@@ -1,0 +1,58 @@
+discovery:
+  enabled: true
+  description: "기술 블로그 형식과 상단 노출 패턴 탐색"
+  query_groups:
+    broad_tech:
+      - "기술 블로그"
+      - "개발자 블로그"
+      - "개발 회고"
+      - "개발 프로젝트 회고"
+    troubleshooting:
+      - "트러블슈팅"
+      - "장애 대응"
+      - "성능 개선"
+      - "에러 해결"
+    domains:
+      - "백엔드 개발"
+      - "프론트엔드 개발"
+      - "AI 개발"
+      - "데이터 엔지니어링"
+      - "인프라 운영"
+
+target:
+  enabled: true
+  description: "사용자가 작성할 글과 직접 연결된 주제 탐색"
+  query_groups:
+    backend:
+      - "Spring Boot 트러블슈팅"
+      - "JPA 성능 개선"
+      - "Redis 캐시 장애"
+      - "Kubernetes 배포"
+      - "서버 모니터링"
+    ai_agent:
+      - "AI agent 개발"
+      - "LLM RAG 구현"
+      - "LangChain 트러블슈팅"
+      - "벡터 DB 구축"
+      - "LLM 서비스 운영"
+    project_review:
+      - "개발 프로젝트 회고"
+      - "사이드 프로젝트 회고"
+      - "인턴 개발자 회고"
+      - "랩 인턴 경험"
+      - "기술 블로그 회고"
+
+collection:
+  sort_modes:
+    - sim
+    - date
+  display: 20
+  start_positions:
+    - 1
+  max_body_fetch_per_query: 5
+  body_fetch_layers:
+    - discovery
+    - target
+  raw_dir: "raw"
+  raw_retention_days: 7
+

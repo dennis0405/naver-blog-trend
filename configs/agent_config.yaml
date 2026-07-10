@@ -1,0 +1,13 @@
+naver:
+  provider: "developers"
+  search:
+    enabled: true
+  trend:
+    enabled: true
+  body_fetch:
+    enabled: true
+    storage: "repository_raw_dir"
+    raw_dir: "raw"
+    retention_days: 7
+    commit_raw_body: true
+

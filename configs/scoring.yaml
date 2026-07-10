@@ -1,0 +1,19 @@
+weights:
+  search_rank_score: 0.35
+  trend_score: 0.20
+  recency_score: 0.15
+  tech_relevance_score: 0.15
+  source_repeat_score: 0.10
+  novelty_score: 0.05
+
+dedup:
+  canonicalize_url: true
+  duplicate_penalty: 0.35
+
+recency:
+  half_life_days: 45
+
+ranking:
+  top_n_daily_report: 30
+  top_n_weekly_playbook: 100
+
