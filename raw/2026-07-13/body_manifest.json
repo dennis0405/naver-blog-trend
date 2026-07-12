@@ -1,0 +1,167 @@
+{
+  "created_at": "2026-07-13T08:59:58+09:00",
+  "items": [
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "ce9b4940d5f3d1351934e5dbfd1f99b44b07d949c87f9a07d3c3278608b43634",
+      "canonical_url": "https://blog.naver.com/filbert_insight/224271575205",
+      "fetched_at": "2026-07-13T08:59:47+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "588f9f99a77af835ba2846e5d02ce7cb58d9512ebd25f97787aa90385d026701",
+      "canonical_url": "https://blog.naver.com/dongtaengi/223827895481",
+      "fetched_at": "2026-07-13T08:59:48+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "d86a2f05a6607c6e5978f46512125692f09fd40864d9f3f065152149be0ef386",
+      "canonical_url": "https://blog.naver.com/sleepyfinger/224317600175",
+      "fetched_at": "2026-07-13T08:59:48+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "6ad132f68ff7f3befc7a4b1928de1b7c097bec06ffc78204a17336fda8d7c519",
+      "canonical_url": "https://blog.naver.com/hesper99/224079866354",
+      "fetched_at": "2026-07-13T08:59:49+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "e88ee26ae41bcd0ad42dda08edfe400b67fb7d545573e67a5633087bca9c1596",
+      "canonical_url": "https://blog.naver.com/c1004ok/224153628736",
+      "fetched_at": "2026-07-13T08:59:49+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "6dafde2dd6ca4f7ba2b2e9aa2b8d050f57d9a35041cd789ee36cf4e4937271da",
+      "canonical_url": "https://blog.naver.com/xavisnet/224306922888",
+      "fetched_at": "2026-07-13T08:59:50+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "8efd631e7a47dc8395ceecaad71a9f2435ec65c0d8990147a18586f26053c6da",
+      "canonical_url": "https://blog.naver.com/aengpark/223518555044",
+      "fetched_at": "2026-07-13T08:59:50+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "6ba1e3551c8fe48581e5d1f5a7b7c94c0642a12ed08916825442da530147c3f1",
+      "canonical_url": "https://blog.naver.com/xavisnet/224041803202",
+      "fetched_at": "2026-07-13T08:59:51+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "d94a4ffd107118f2c874feb07b092e75caa5ffa67bef486cddcfa569ba1a2b8d",
+      "canonical_url": "https://blog.naver.com/xavisnet/224102026437",
+      "fetched_at": "2026-07-13T08:59:52+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "eb6a5d8636e8412b960868fb5a1f154c553270728e9f64103581678340319301",
+      "canonical_url": "https://blog.naver.com/pjbmask/224319068714",
+      "fetched_at": "2026-07-13T08:59:52+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "5e446f4f2b303e6b687c9fb8e2c71a6436a1c7258e687e96b95d0c4345d8c44d",
+      "canonical_url": "https://blog.naver.com/jui8/224292276193",
+      "fetched_at": "2026-07-13T08:59:53+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "0750597fc32cbf26e19830cfa601a45f9af0799fa3c54f4235782a393b03b95a",
+      "canonical_url": "https://blog.naver.com/sung487/223641482593",
+      "fetched_at": "2026-07-13T08:59:54+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "88565375663739700fb359473b827e8255994e9dfe27e06b5418deab211fca22",
+      "canonical_url": "https://blog.naver.com/speeddog3/224249812812",
+      "fetched_at": "2026-07-13T08:59:54+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "8185d966ba8698e7a428d44852d7fde6ca54973727b4baad907277827cd684ef",
+      "canonical_url": "https://blog.naver.com/devarchive/224319994642",
+      "fetched_at": "2026-07-13T08:59:55+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "583dd60960438172494fd11fd7346217e9303997104c8f9f630a0e374e71d070",
+      "canonical_url": "https://blog.naver.com/chichiming3/224282712264",
+      "fetched_at": "2026-07-13T08:59:55+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "b376e85b1cdc72b8a8f98bf272746bee90a46e2565def5659b82f46503912997",
+      "canonical_url": "https://blog.naver.com/adg0609/224339746454",
+      "fetched_at": "2026-07-13T08:59:56+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "e46be68160a7caedca3cf8fcff39cc80fb9259f714bf3ec2f685a726448c8cae",
+      "canonical_url": "https://blog.naver.com/asblack/224318399244",
+      "fetched_at": "2026-07-13T08:59:57+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "9a7a50b02de164f0b825306592ecbccfdd5e46e22e853d6548171acd50a3b885",
+      "canonical_url": "https://blog.naver.com/poppedkimbab/223678249655",
+      "fetched_at": "2026-07-13T08:59:57+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "8d9210ab5b8780afcca691dcce8c2a048dce0db37dcce130ee0b3bb1774489f9",
+      "canonical_url": "https://blog.naver.com/ed0345_f/223958724470",
+      "fetched_at": "2026-07-13T08:59:58+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    },
+    {
+      "body_path": "raw/2026-07-13/blog_bodies.jsonl",
+      "candidate_id": "bb555655e77a3a4321b78a531e68077a0bd5d4a03c85810f0475bf4bcd0226c0",
+      "canonical_url": "https://blog.naver.com/drinkyoo/224337372383",
+      "fetched_at": "2026-07-13T08:59:58+09:00",
+      "retained_until": "2026-07-20",
+      "status": "ok"
+    }
+  ],
+  "raw_dir": "raw/2026-07-13",
+  "retention_days": 7
+}
