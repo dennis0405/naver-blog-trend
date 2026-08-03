@@ -4,7 +4,11 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .DS_Store
-.agents
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/extract-style/
+!.agents/skills/extract-style/**
 .codex
 naver_tech_blog_agent_mvp_guideline.md
 specs/
