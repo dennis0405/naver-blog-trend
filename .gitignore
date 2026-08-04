@@ -9,7 +9,10 @@ __pycache__/
 .agents/skills/*
 !.agents/skills/extract-style/
 !.agents/skills/extract-style/**
+!.agents/skills/review-draft/
+!.agents/skills/review-draft/**
 .codex
+_workspace/
 naver_tech_blog_agent_mvp_guideline.md
 specs/
 tasks/

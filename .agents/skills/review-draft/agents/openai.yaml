@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Draft"
+  short_description: "Review drafts with the style playbook and Korean polish"
+  default_prompt: "Use $review-draft to review a named draft with the style playbook and create a polished final post."
