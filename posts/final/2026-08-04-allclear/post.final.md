@@ -1,6 +1,6 @@
-# 애플 개발자 계정 이전, Sign in with Apple 사용자 식별자까지 옮긴 과정
+# Apple 개발자 계정 이전 가이드: iOS App Transfer와 Sign in with Apple 사용자 마이그레이션
 
-운영 중인 iOS 앱의 개발자 계정을 이전했다. 작업 기간은 `2026.03-2026.04`였고, 나는 iOS 서명 설정 전환과 Sign in with Apple 사용자 마이그레이션을 맡았다.
+올클(AllClear)은 동아리 상세 정보와 모집공고, 활동 후기를 한곳에서 살펴보는 동아리 탐색 서비스다. 2026년 3월부터 4월까지 운영 중이던 올클 iOS 앱의 소유권을 기존 Apple Developer 계정에서 새 계정으로 이전했다. 나는 이 작업에서 iOS 서명 설정 전환과 Sign in with Apple 사용자 마이그레이션을 맡았다.
 
 처음에는 App Store Connect에서 소유권을 넘기고 Xcode의 Team만 바꾸면 끝날 줄 알았다. Bundle ID가 유지되니 사용자에게도 별다른 변화가 없을 거라고 봤다. 하지만 이 앱은 Sign in with Apple을 사용하고 있었다.
 
