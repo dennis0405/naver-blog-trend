@@ -11,6 +11,8 @@ __pycache__/
 !.agents/skills/extract-style/**
 !.agents/skills/review-draft/
 !.agents/skills/review-draft/**
+.agents/skills/**/__pycache__/
+.agents/skills/**/*.pyc
 .codex
 _workspace/
 naver_tech_blog_agent_mvp_guideline.md

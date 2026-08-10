@@ -12,7 +12,7 @@
 - 본문까지 확보된 기술 글에서 날짜별 참고 대상을 선별한다.
 - raw, derived, daily report는 최근 7일치만 유지한다.
 - 최근 7일의 참고 대상에서 원문이 아닌 추상적인 스타일 규칙만 뽑는다.
-- 스타일 플레이북으로 사용자의 초안을 검토해 완성본과 품질 보고서를 만든다.
+- 스타일 플레이북으로 사용자의 초안을 검토해 Markdown 완성본, 네이버 복사용 평문, 품질 보고서를 만든다.
 
 반대로 아래 작업은 하지 않는다.
 
@@ -36,7 +36,7 @@ flowchart TD
     H --> I[style_playbook.md]
     I --> J[posts/drafts에 초안 작성]
     J --> K[$review-draft 초안명]
-    K --> L[완성본과 quality report]
+    K --> L[Markdown 완성본·Naver 평문·quality report]
     L --> M[사람이 최종 검토 후 게시]
 ```
 
@@ -47,7 +47,7 @@ flowchart TD
 | 보존 기간 정리 | GitHub Actions 또는 로컬 | 수집 직후 자동 | 최근 7일 데이터 |
 | 스타일 추출 | 로컬 Codex | 사용자가 실행 | `knowledge/style/` |
 | 초안 작성 | 로컬 | 사용자가 작성 | `posts/drafts/` |
-| 초안 검토·윤문 | 로컬 Codex | 사용자가 실행 | `posts/final/` |
+| 초안 검토·윤문 | 로컬 Codex | 사용자가 실행 | `post.final.md`, `post.naver.txt`, `quality_report.md` |
 | 발행 | 네이버 블로그 | 사람의 최종 판단 | 게시글 |
 
 ## 요구사항
@@ -333,13 +333,17 @@ $review-draft example
 4. 비밀값과 개인 정보를 검사하고 필요한 경우 마스킹한다.
 5. 사용 가능한 경우 `humanize-korean`으로 한국어 문체를 한 번 더 윤문한다.
 6. 보존 항목과 기밀 검사를 다시 수행한다.
+7. 검증된 Markdown을 네이버 에디터에 붙여넣기 쉬운 평문으로 변환한다.
 
 원본 초안은 건드리지 않는다. 완성본과 보고서는 아래 경로에 새로 쓴다.
 
 ```text
 posts/final/{draft_stem}/post.final.md
+posts/final/{draft_stem}/post.naver.txt
 posts/final/{draft_stem}/quality_report.md
 ```
+
+`post.final.md`는 제목, 코드, 표, 링크 구조를 보존하는 검증용 원본이다. 실제 네이버 블로그에는 `post.naver.txt`를 복사해 붙여넣는다. 이 파일은 제목과 소제목의 Markdown 기호, 코드 fence, 표 구분선, inline backtick을 제거한다. 표는 각 행에서 열 이름을 반복한 `항목: 값` 형태로 펼치고, 목록과 코드·로그 내용은 유지한다. 네이버 에디터에서 보이는 `AI 활용 설정`, `사진 설명을 입력하세요.` 같은 UI 문구는 생성하지 않는다.
 
 검토 결과는 `quality_report.md`의 verdict로 요약한다.
 
@@ -361,9 +365,9 @@ posts/final/{draft_stem}/quality_report.md
 4. `knowledge/style/runs/{date}.md`의 입력 수와 중복 제거 수를 확인한다.
 5. `knowledge/style/style_playbook.md`의 추상 규칙을 사람이 검토한다.
 6. `posts/drafts/`에 사실과 공개 범위를 갖춘 초안을 작성한다.
-7. `$review-draft {draft_name}`으로 완성본과 품질 보고서를 만든다.
+7. `$review-draft {draft_name}`으로 Markdown 완성본, 네이버 복사용 평문, 품질 보고서를 만든다.
 8. `quality_report.md`가 `PASS`인지, TODO와 마스킹 항목이 없는지 확인한다.
-9. 완성본을 사람이 읽고 네이버 블로그에 직접 게시한다.
+9. `post.naver.txt`를 사람이 읽고 네이버 에디터에 붙여넣어 직접 게시한다.
 
 데이터가 7일치 모인 뒤에도 스타일 추출을 매일 반복할 이유는 없다. 검색 주제나 상위 글 구성이 충분히 달라진 시점에 다시 실행한다. 새 글을 쓰기 전에 최신 플레이북이 필요할 때도 갱신하면 된다.
 
@@ -393,6 +397,7 @@ posts/final/{draft_stem}/quality_report.md
 │   ├── drafts/{draft}.md
 │   └── final/{draft}/
 │       ├── post.final.md
+│       ├── post.naver.txt
 │       └── quality_report.md
 ├── prompts/                       # 로컬 스타일 추출용 prompt
 ├── raw/{date}/                    # 검색·추이·공개 본문 원본, 7일 보존

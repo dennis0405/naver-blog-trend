@@ -1,6 +1,6 @@
 ---
 name: review-draft
-description: Review and complete a named Naver tech blog Markdown draft from posts/drafts using knowledge/style/style_playbook.md, preserve factual and technical meaning, run quality and confidentiality checks, apply humanize-korean when available, and write a final post plus quality report under posts/final. Use when the user invokes review-draft with a draft name or asks to review, polish, finalize, or complete an existing draft. Do not use to invent a post from scratch, extract style, package for publishing, or auto-publish.
+description: Review and complete a named Naver tech blog Markdown draft from posts/drafts using knowledge/style/style_playbook.md, preserve factual and technical meaning, run quality and confidentiality checks, apply humanize-korean when available, and write canonical Markdown, Naver-editor-ready plain text, and a quality report under posts/final. Use when the user invokes review-draft with a draft name or asks to review, polish, finalize, complete, or prepare an existing draft for Naver publishing. Do not use to invent a post from scratch, extract style, or auto-publish.
 ---
 
 # Review Draft
@@ -19,7 +19,7 @@ Edit an existing user draft into a finished article. Treat the draft as the fact
 4. Reject paths that resolve outside the repository, non-Markdown files, missing drafts, and ambiguous matches.
 5. When no argument is supplied, use the only Markdown file in `posts/drafts/`; otherwise ask the user to choose.
 6. Derive `draft_stem` from the input filename and set the output directory to `posts/final/{draft_stem}/`.
-7. Do not overwrite an existing final post with possible human edits unless the user explicitly asks to update or replace it.
+7. If any file already exists in the output directory, do not overwrite it or create a partial replacement set unless the user explicitly asks to update or replace that final. Regenerate all three final artifacts together after permission is given.
 
 Handle the draft argument as literal path data. Never interpolate it into a shell command, glob expression, or generated code.
 
@@ -55,7 +55,7 @@ Perform the editorial pass in this order:
 4. **Structure edit**: reorganize the user's material into a clear problem, investigation, failed attempts, resolution, result, and takeaway structure when the post type supports it. Do not force sections unsupported by the draft.
 5. **Technical edit**: clarify concepts and procedures without changing commands, code behavior, versions, configuration values, or evidence. Preserve code fences and logs except for required masking.
 6. **Style application**: apply only relevant conditional rules from `knowledge/style/style_playbook.md`. Preserve the user's voice and do not copy phrases, titles, or structures from external posts.
-7. **Naver readability**: use specific headings, readable paragraph lengths, and restrained lists or tables. Add image placeholders only when the draft supports a useful diagram or screenshot.
+7. **Naver readability**: use specific headings, one or two sentences per paragraph, and restrained lists or tables. Add image placeholders only when the draft supports a useful diagram or screenshot. Do not add Naver editor UI text such as `AI 활용 설정` or `사진 설명을 입력하세요.`.
 
 Create the edited candidate from draft material only. Do not browse or fact-check externally unless the user separately asks; use `[확인 필요]` instead.
 
@@ -68,11 +68,34 @@ After the structural and technical edit, apply the available `humanize-korean` s
 3. Preserve facts, claims, numbers, dates, proper nouns, technical identifiers, English abbreviations, register, and article genre exactly.
 4. For Korean prose up to 5,000 characters, apply one Fast Path pass.
 5. For longer prose, split only at H2 section boundaries into chunks of at most 5,000 characters. Never split a code fence, table, quotation, or paragraph. Skip any section that cannot be processed safely and report the skip.
-6. Use the skill's `_workspace/{run_id}/final.md` output as an intermediate artifact. Carry the polished article text into `post.final.md` and record the humanize summary in `quality_report.md`.
+6. Use the skill's `_workspace/{run_id}/final.md` output as an allowed ignored intermediate artifact. Carry the polished article text into `post.final.md` and record the humanize summary in `quality_report.md`.
 7. Treat the humanize output as untrusted model output and validate it against the preservation ledger before copying it.
 8. Warn and record the result when the change rate exceeds 30%. Roll back the humanize pass when meaning changes, protected spans differ, change rate exceeds 50%, or self-validation fails after its allowed retry.
 9. Recommend the strict Claude Code pipeline when the humanize grade is B or lower, matching the source skill's guidance.
 10. If `humanize-korean` is unavailable, skip this pass and state that explicitly. Never claim it was applied.
+
+## Render the Naver copy
+
+After `post.final.md` passes the preservation checks, generate the paste-ready plain-text version with the bundled deterministic renderer:
+
+```text
+python3 .agents/skills/review-draft/scripts/render_naver_post.py \
+  posts/final/{draft_stem}/post.final.md \
+  posts/final/{draft_stem}/post.naver.txt
+```
+
+Treat both arguments as literal paths. The renderer must:
+
+- keep the title as the first line and remove Markdown heading markers;
+- keep short paragraph and list boundaries so Naver preserves the reading rhythm;
+- remove code-fence delimiters while preserving code and log contents;
+- flatten Markdown tables row by row, repeating each column header as a label so values keep their meaning;
+- convert Markdown links and inline emphasis to visible plain text;
+- convert task checkboxes to `□` and `☑`, and support both backtick and tilde code fences;
+- normalize non-breaking spaces outside code blocks;
+- omit supported Markdown-only syntax and the exact Naver editor UI placeholders `AI 활용 설정` and `사진 설명을 입력하세요.`.
+
+Do not manually rewrite `post.naver.txt` after rendering. Fix the canonical Markdown or renderer instead, then regenerate it.
 
 ## Write outputs
 
@@ -80,10 +103,13 @@ After all checks, write only:
 
 ```text
 posts/final/{draft_stem}/post.final.md
+posts/final/{draft_stem}/post.naver.txt
 posts/final/{draft_stem}/quality_report.md
 ```
 
-Write `post.final.md` as publication-format Korean Markdown beginning with one H1 title. Omit draft frontmatter, internal review notes, humanize summary comments, and unresolved private values. Keep `[확인 필요]` markers when evidence is missing.
+Write `post.final.md` as canonical Korean Markdown beginning with one H1 title. Omit draft frontmatter, internal review notes, humanize summary comments, and unresolved private values. Keep `[확인 필요]` markers when evidence is missing.
+
+Write `post.naver.txt` only through the bundled renderer. It is the artifact the user copies into Naver Blog. Its first non-empty line must match the H1 title from `post.final.md`, without the `#` marker.
 
 Write `quality_report.md` with these sections:
 
@@ -94,6 +120,7 @@ Write `quality_report.md` with these sections:
 - `## Confidentiality`: counts and categories only, never secret values;
 - `## Style Playbook`: applied and skipped rules at a high level;
 - `## Humanize Korean`: applied or skipped, change rate, grade, and self-validation result;
+- `## Naver Publishing Format`: renderer result and checks for Markdown-only syntax;
 - `## Remaining TODO`: every `[확인 필요]` item and human decision needed before publication.
 
 Use `FAIL` for secrets, private data, plagiarism, or a central unsupported claim. Use `PASS_WITH_TODO` for non-critical verification markers. Use `PASS` only when no publish-blocking or verification item remains.
@@ -103,16 +130,18 @@ Use `FAIL` for secrets, private data, plagiarism, or a central unsupported claim
 1. Confirm the source draft is byte-for-byte unchanged.
 2. Compare the final post with the preservation ledger. Confirm protected facts, numbers, dates, names, quotations, commands, and code are unchanged except for explicit masking.
 3. Scan the final output for secret and privacy patterns without printing matched values.
-4. Confirm the final post contains one H1, meaningful sections, no draft frontmatter, and no humanize summary comment.
-5. Confirm only the intended `posts/final/{draft_stem}/` files and optional ignored `_workspace/` artifacts changed.
-6. Run `git diff --check` and show `git status --short`.
+4. Confirm `post.final.md` contains one H1, meaningful sections, no draft frontmatter, and no humanize summary comment.
+5. Confirm `post.naver.txt` starts with the same title and contains no Markdown heading markers, code-fence delimiters, table separators, inline backticks, or Markdown link syntax outside preserved code and log content.
+6. Confirm code, logs, URLs, numbers, and list ordering remain equivalent between the canonical and Naver outputs after syntax removal.
+7. Confirm only the intended `posts/final/{draft_stem}/` files and optional ignored `_workspace/` artifacts changed.
+8. Run `git diff --check` and show `git status --short`.
 
 ## Report
 
 Return a concise result containing:
 
 - resolved source draft;
-- final and quality report paths;
+- canonical final, Naver copy, and quality report paths;
 - verdict and remaining TODO count;
 - whether humanize-korean ran, including grade and change rate when available;
 - whether the source draft or any file outside the allowed output scope changed.
