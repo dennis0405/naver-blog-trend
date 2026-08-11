@@ -18,3 +18,10 @@ _workspace/
 naver_tech_blog_agent_mvp_guideline.md
 specs/
 tasks/
+!specs/
+specs/*
+!specs/naver_velog_dual_editorial_pipeline.md
+!tasks/
+tasks/*
+!tasks/plan.md
+!tasks/todo.md
