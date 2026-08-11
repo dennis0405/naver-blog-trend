@@ -1,4 +1,4 @@
 interface:
   display_name: "Review Draft"
-  short_description: "Review drafts and create Naver-ready publishing copy"
-  default_prompt: "Use $review-draft to review a named draft and create canonical Markdown, Naver-ready plain text, and a quality report."
+  short_description: "Create Naver and Velog publishing-ready posts"
+  default_prompt: "Use $review-draft to review a named draft and create independent Velog Markdown, Naver plain text, and a cross-platform quality report."

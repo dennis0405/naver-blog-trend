@@ -22,7 +22,7 @@ Source of truth: `specs/naver_velog_dual_editorial_pipeline.md`
   - Verify: fake-Codex integration tests and extract-style skill validation
   - Files: extraction script, prompts, knowledge templates, skill, tests
 
-- [ ] Task 4: Generate independent Velog and Naver final posts
+- [x] Task 4: Generate independent Velog and Naver final posts
   - Acceptance: review skill writes both platform outputs and cross-platform quality verdict
   - Verify: renderer tests, skill validation and read-only forward test
   - Files: review skill, renderer contract, metadata, tests

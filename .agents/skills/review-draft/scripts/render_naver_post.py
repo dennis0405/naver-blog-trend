@@ -225,7 +225,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Render a canonical Markdown post as Naver-friendly plain text."
     )
-    parser.add_argument("input", type=Path, help="Path to post.final.md")
+    parser.add_argument("input", type=Path, help="Path to the Naver Markdown candidate")
     parser.add_argument("output", type=Path, help="Path to post.naver.txt")
     return parser.parse_args(argv)
 
