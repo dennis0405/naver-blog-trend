@@ -22,10 +22,19 @@ def main() -> None:
     config = load_yaml(args.config)
     collection = collection_config(config)
     max_per_query = int(collection.get("max_body_fetch_per_query", 5))
+    max_velog = int(collection.get("max_velog_body_fetch", 20))
     body_layers = {str(layer) for layer in collection.get("body_fetch_layers", ["discovery", "target"])}
     raw_path = raw_date_dir(args.raw_dir, date_value)
-    candidates = list(read_jsonl(raw_path / "naver_search.jsonl"))
-    selected = select_body_candidates(candidates, max_per_query=max_per_query, body_layers=body_layers)
+    candidates = [
+        *read_jsonl(raw_path / "naver_search.jsonl"),
+        *read_jsonl(raw_path / "velog_posts.jsonl"),
+    ]
+    selected = select_body_candidates(
+        candidates,
+        max_per_query=max_per_query,
+        body_layers=body_layers,
+        source_limits={"velog": max_velog},
+    )
 
     fetcher = PublicBodyFetcher()
     body_records: list[dict[str, Any]] = []
@@ -48,7 +57,8 @@ def main() -> None:
             "error": result.error,
             "body_text": result.body_text,
             "text_length": len(result.body_text),
-            "source": "public_blog_body_fetch",
+            "source": _candidate_source(candidate),
+            "fetch_source": "public_blog_body_fetch",
         }
         body_records.append(body_record)
         manifest_items.append(
@@ -57,6 +67,7 @@ def main() -> None:
                 "canonical_url": candidate.get("canonical_url"),
                 "fetched_at": body_record["fetched_at"],
                 "status": result.status,
+                "source": body_record["source"],
                 "body_path": str(Path(args.raw_dir) / date_value / "blog_bodies.jsonl"),
                 "retained_until": retained_until(date_value, int(collection.get("raw_retention_days", 7))),
             }
@@ -79,35 +90,47 @@ def select_body_candidates(
     *,
     max_per_query: int,
     body_layers: set[str],
+    source_limits: dict[str, int] | None = None,
 ) -> list[dict[str, Any]]:
+    source_limits = source_limits or {}
     grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
     for candidate in candidates:
         if not candidate.get("body_fetch_eligible"):
             continue
         if candidate.get("search_layer") not in body_layers:
             continue
-        grouped[
-            (
+        source = _candidate_source(candidate)
+        if source in source_limits:
+            group_key = (source, "", "")
+        else:
+            group_key = (
                 str(candidate.get("search_layer")),
                 str(candidate.get("query")),
                 str(candidate.get("sort")),
             )
-        ].append(candidate)
+        grouped[group_key].append(candidate)
 
     selected: list[dict[str, Any]] = []
     seen_urls: set[str] = set()
-    for group_candidates in grouped.values():
+    for group_key, group_candidates in grouped.items():
+        group_limit = source_limits.get(group_key[0], max_per_query)
+        selected_from_group = 0
         for candidate in sorted(group_candidates, key=lambda item: int(item.get("rank", 999999))):
             canonical_url = str(candidate.get("canonical_url") or candidate.get("link"))
             if canonical_url in seen_urls:
                 continue
             selected.append(candidate)
             seen_urls.add(canonical_url)
-            if len([item for item in selected if item.get("query") == candidate.get("query") and item.get("sort") == candidate.get("sort")]) >= max_per_query:
+            selected_from_group += 1
+            if selected_from_group >= group_limit:
                 break
     return selected
 
 
+def _candidate_source(candidate: dict[str, Any]) -> str:
+    source = str(candidate.get("source", ""))
+    return "velog" if source == "velog" else "naver"
+
+
 if __name__ == "__main__":
     main()
-

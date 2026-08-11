@@ -7,7 +7,7 @@ Source of truth: `specs/naver_velog_dual_editorial_pipeline.md`
   - Verify: `git diff --check`
   - Files: `specs/`, `tasks/`
 
-- [ ] Task 1: Collect public Velog trending and curated posts
+- [x] Task 1: Collect public Velog trending and curated posts
   - Acceptance: valid top posts are deduplicated and written to `velog_posts.jsonl`
   - Verify: focused parser and collector tests, then full suite
   - Files: client, collector, body fetcher, tests

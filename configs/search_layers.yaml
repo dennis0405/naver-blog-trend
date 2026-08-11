@@ -41,8 +41,10 @@ collection:
   start_positions:
     - 1
   max_body_fetch_per_query: 1
+  max_velog_body_fetch: 20
   body_fetch_layers:
     - discovery
     - target
+    - velog
   raw_dir: "raw"
   raw_retention_days: 7
