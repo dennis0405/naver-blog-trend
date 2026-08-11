@@ -24,7 +24,7 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Stage 1 - collect Naver metadata and public bodies
+      - name: Stage 1 - collect Naver and Velog metadata and public bodies
         env:
           NAVER_API_PROVIDER: ${{ secrets.NAVER_API_PROVIDER }}
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
@@ -34,6 +34,7 @@ jobs:
         run: |
           python3 -m src.collectors.collect_naver_search --date today --layers all
           python3 -m src.collectors.collect_naver_trend --date today
+          python3 -m src.collectors.collect_velog_posts --date today --raw-dir raw
           python3 -m src.collectors.fetch_blog_bodies --date today --raw-dir raw
 
       - name: Stage 2 - rank candidates, extract reference targets, and prune retention
@@ -46,5 +47,5 @@ jobs:
           git config user.name "blog-agent-bot"
           git config user.email "blog-agent-bot@example.com"
           git add raw data/reports data/derived || true
-          git commit -m "chore: daily naver blog pipeline" || echo "No changes"
+          git commit -m "chore: daily naver and velog blog pipeline" || echo "No changes"
           git push

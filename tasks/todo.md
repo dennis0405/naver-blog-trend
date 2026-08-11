@@ -27,12 +27,12 @@ Source of truth: `specs/naver_velog_dual_editorial_pipeline.md`
   - Verify: renderer tests, skill validation and read-only forward test
   - Files: review skill, renderer contract, metadata, tests
 
-- [ ] Task 5: Update automation and Korean documentation
+- [x] Task 5: Update automation and Korean documentation
   - Acceptance: daily workflow collects Velog and README describes the full operation
   - Verify: workflow inspection, README command/path checks, full suite and compile check
   - Files: GitHub Actions, README, task status
 
-- [ ] Task 6: Final review and clean handoff
+- [x] Task 6: Final review and clean handoff
   - Acceptance: no required correctness, security, architecture or documentation finding remains
   - Verify: staged diff review, secret scan, `git status --short --branch`
   - Files: only corrections required by review
