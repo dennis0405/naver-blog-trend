@@ -18,6 +18,7 @@ from scripts.extract_style_local import (
     GENERATED_START_MARKER,
     StyleInput,
     StyleExtractionError,
+    atomic_write_many,
     atomic_write_text,
     build_date_window,
     build_prompt_records,
@@ -191,6 +192,7 @@ class CodexRunnerTests(unittest.TestCase):
     def test_build_prompt_records_excludes_join_only_and_source_identity_fields(self) -> None:
         item = StyleInput(
             date="2026-07-11",
+            source="naver",
             rank_position=1,
             canonical_url="https://blog.naver.com/dev/1",
             title_clean="A technical title",
@@ -209,6 +211,7 @@ class CodexRunnerTests(unittest.TestCase):
             set(records[0]),
             {
                 "date",
+                "source",
                 "rank_position",
                 "title_clean",
                 "postdate",
@@ -383,6 +386,17 @@ class PlaybookUpdateTests(unittest.TestCase):
 
             self.assertEqual(target.read_text(encoding="utf-8"), "second\n")
 
+    def test_atomic_write_many_replaces_all_staged_files(self) -> None:
+        with TemporaryDirectory() as temp_dir:
+            base = Path(temp_dir)
+            first = base / "first.md"
+            second = base / "nested" / "second.md"
+
+            atomic_write_many({first: "one\n", second: "two\n"})
+
+            self.assertEqual(first.read_text(encoding="utf-8"), "one\n")
+            self.assertEqual(second.read_text(encoding="utf-8"), "two\n")
+
 
 class LocalStyleExtractionIntegrationTests(unittest.TestCase):
     def test_main_runs_daily_extraction_then_abstract_only_aggregation(self) -> None:
@@ -441,6 +455,10 @@ class LocalStyleExtractionIntegrationTests(unittest.TestCase):
             self.assertIn("Keep my rule.", updated_playbook)
             self.assertNotIn("old generated", updated_playbook)
             self.assertIn("## Current Observed Style", updated_playbook)
+            naver_playbook = knowledge_dir / "platforms" / "naver.md"
+            velog_playbook = knowledge_dir / "platforms" / "velog.md"
+            self.assertIn("## Current Observed Naver Style", naver_playbook.read_text(encoding="utf-8"))
+            self.assertIn("## Current Observed Velog Style", velog_playbook.read_text(encoding="utf-8"))
             run_path = knowledge_dir / "runs" / f"{date_value}.md"
             self.assertTrue(run_path.is_file())
             self.assertNotIn(source_body, run_path.read_text(encoding="utf-8"))
@@ -451,6 +469,7 @@ class LocalStyleExtractionIntegrationTests(unittest.TestCase):
             aggregate_files = "\n".join(records[1]["files"].values())
             self.assertNotIn(source_body, aggregate_files)
             self.assertNotIn("https://blog.naver.com", aggregate_files)
+            self.assertIn('"source": "naver"', records[0]["files"]["source_data.json"])
 
             run_path.write_text("stale run\n", encoding="utf-8")
             with redirect_stdout(StringIO()):
@@ -520,13 +539,16 @@ class LocalStyleExtractionIntegrationTests(unittest.TestCase):
             self.assertEqual(exit_code, 1)
             self.assertIn("required heading", stderr.getvalue())
             self.assertEqual(playbook_path.read_text(encoding="utf-8"), original)
+            self.assertFalse((knowledge_dir / "platforms" / "naver.md").exists())
+            self.assertFalse((knowledge_dir / "platforms" / "velog.md").exists())
             self.assertFalse((knowledge_dir / "runs" / f"{date_value}.md").exists())
 
 
-def _target(rank: int, canonical_url: str) -> dict[str, object]:
+def _target(rank: int, canonical_url: str, *, source: str = "naver") -> dict[str, object]:
     return {
         "date": "2026-07-11",
         "rank_position": rank,
+        "source": source,
         "canonical_url": canonical_url,
         "title_clean": f"title {rank}",
         "postdate": "20260711",
@@ -540,6 +562,7 @@ def _target(rank: int, canonical_url: str) -> dict[str, object]:
 def _style_input(*, title: str, body_text: str) -> StyleInput:
     return StyleInput(
         date="2026-07-11",
+        source="naver",
         rank_position=1,
         canonical_url="https://blog.naver.com/dev/1",
         title_clean=title,

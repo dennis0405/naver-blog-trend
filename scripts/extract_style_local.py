@@ -27,26 +27,29 @@ SOURCE_OVERLAP_TOKENS = 12
 DEFAULT_CODEX_TIMEOUT_SECONDS = 900
 GENERATED_START_MARKER = "<!-- CODEX:GENERATED:START -->"
 GENERATED_END_MARKER = "<!-- CODEX:GENERATED:END -->"
-INITIAL_PLAYBOOK = (
-    "# Style Playbook\n\n"
+INITIAL_PLAYBOOK_TEMPLATE = (
+    "# {title}\n\n"
     "## Human Rules\n\n"
     f"{GENERATED_START_MARKER}\n"
-    "## Current Observed Style\n\n"
+    "## {observed_heading}\n\n"
     "No local style extraction has been run yet.\n"
     f"{GENERATED_END_MARKER}\n"
 )
 BATCH_HEADINGS = (
-    "## Title Patterns",
-    "## Opening Patterns",
-    "## Structure Patterns",
-    "## Paragraph Rhythm",
-    "## Code List and Table Placement",
-    "## Tone and Transitions",
-    "## Closing Patterns",
-    "## Draft Editing Rules",
-    "## Confidence Notes",
+    "## Common Patterns",
+    "## Naver Patterns",
+    "## Velog Patterns",
 )
-AGGREGATE_HEADINGS = ("## Current Observed Style", *BATCH_HEADINGS)
+AGGREGATE_HEADINGS = (
+    "## Common Style",
+    "## Naver Style",
+    "## Velog Style",
+)
+PLAYBOOK_SPECS = {
+    "common": ("style_playbook.md", "Style Playbook", "Current Observed Style"),
+    "naver": ("platforms/naver.md", "Naver Style Playbook", "Current Observed Naver Style"),
+    "velog": ("platforms/velog.md", "Velog Style Playbook", "Current Observed Velog Style"),
+}
 CODEX_ENV_ALLOWLIST = {
     "CODEX_HOME",
     "HOME",
@@ -68,6 +71,7 @@ class StyleExtractionError(RuntimeError):
 @dataclass(frozen=True)
 class StyleInput:
     date: str
+    source: str
     rank_position: int
     canonical_url: str
     title_clean: str
@@ -99,6 +103,8 @@ class SelectionResult:
 @dataclass(frozen=True)
 class ExtractionRunResult:
     playbook_path: Path
+    naver_playbook_path: Path
+    velog_playbook_path: Path
     run_path: Path
     unique_inputs: int
     batches_completed: int
@@ -109,6 +115,7 @@ def build_prompt_records(inputs: Sequence[StyleInput]) -> list[dict[str, object]
     return [
         {
             "date": item.date,
+            "source": item.source,
             "rank_position": item.rank_position,
             "title_clean": item.title_clean,
             "postdate": item.postdate,
@@ -268,6 +275,56 @@ def atomic_write_text(path: str | Path, content: str) -> None:
         temporary_path.unlink(missing_ok=True)
 
 
+def atomic_write_many(files: Mapping[Path, str]) -> None:
+    """Stage every file before replacing any target, then roll back on replace failure."""
+    staged: dict[Path, Path] = {}
+    originals: dict[Path, bytes | None] = {}
+    replaced: list[Path] = []
+    try:
+        for target, content in files.items():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            originals[target] = target.read_bytes() if target.exists() else None
+            descriptor, temporary_name = tempfile.mkstemp(
+                prefix=f".{target.name}.", suffix=".tmp", dir=target.parent
+            )
+            temporary_path = Path(temporary_name)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                handle.write(content)
+                handle.flush()
+                os.fsync(handle.fileno())
+            staged[target] = temporary_path
+
+        for target, temporary_path in staged.items():
+            temporary_path.replace(target)
+            replaced.append(target)
+    except OSError as exc:
+        for target in reversed(replaced):
+            original = originals[target]
+            if original is None:
+                target.unlink(missing_ok=True)
+            else:
+                _restore_bytes(target, original)
+        raise StyleExtractionError("could not update all style outputs") from exc
+    finally:
+        for temporary_path in staged.values():
+            temporary_path.unlink(missing_ok=True)
+
+
+def _restore_bytes(target: Path, content: bytes) -> None:
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{target.name}.", suffix=".rollback", dir=target.parent
+    )
+    temporary_path = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        temporary_path.replace(target)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
 def extract_generated_region(playbook: str) -> str:
     if (
         playbook.count(GENERATED_START_MARKER) != 1
@@ -279,6 +336,34 @@ def extract_generated_region(playbook: str) -> str:
     if start >= end:
         raise StyleExtractionError("generated markers are out of order")
     return playbook[start:end].strip() + "\n"
+
+
+def split_heading_sections(
+    output: str, headings: Sequence[str]
+) -> dict[str, str]:
+    matches = [re.search(rf"(?m)^{re.escape(heading)}\s*$", output) for heading in headings]
+    if any(match is None for match in matches):
+        raise StyleExtractionError("validated output is missing a platform section")
+    positions = [match.start() for match in matches if match is not None]
+    sections: dict[str, str] = {}
+    for index, heading in enumerate(headings):
+        start = positions[index] + len(heading)
+        end = positions[index + 1] if index + 1 < len(positions) else len(output)
+        sections[heading] = output[start:end].strip()
+    return sections
+
+
+def _initial_playbook(key: str) -> str:
+    _, title, observed_heading = PLAYBOOK_SPECS[key]
+    return INITIAL_PLAYBOOK_TEMPLATE.format(
+        title=title,
+        observed_heading=observed_heading,
+    )
+
+
+def _platform_generated(key: str, body: str) -> str:
+    observed_heading = PLAYBOOK_SPECS[key][2]
+    return f"## {observed_heading}\n\n{body.strip()}\n"
 
 
 def run_local_style_extraction(args: argparse.Namespace) -> ExtractionRunResult:
@@ -320,17 +405,25 @@ def run_local_style_extraction(args: argparse.Namespace) -> ExtractionRunResult:
             source_inputs=batch_inputs,
         )
 
-    playbook_path = args.knowledge_dir / "style_playbook.md"
-    existing_playbook = (
-        playbook_path.read_text(encoding="utf-8") if playbook_path.is_file() else INITIAL_PLAYBOOK
-    )
-    previous_generated = extract_generated_region(existing_playbook)
+    playbook_paths = {
+        key: args.knowledge_dir / filename
+        for key, (filename, _, _) in PLAYBOOK_SPECS.items()
+    }
+    existing_playbooks = {
+        key: (
+            path.read_text(encoding="utf-8")
+            if path.is_file()
+            else _initial_playbook(key)
+        )
+        for key, path in playbook_paths.items()
+    }
     run_statistics = _run_statistics(args, selection)
     aggregation_files = {
         f"batch_observations/{date_value}.md": output
         for date_value, output in batch_outputs.items()
     }
-    aggregation_files["previous_generated.md"] = previous_generated
+    for key, playbook in existing_playbooks.items():
+        aggregation_files[f"previous_generated/{key}.md"] = extract_generated_region(playbook)
     aggregation_files["run_statistics.json"] = json.dumps(
         run_statistics,
         ensure_ascii=False,
@@ -349,14 +442,32 @@ def run_local_style_extraction(args: argparse.Namespace) -> ExtractionRunResult:
         required_headings=AGGREGATE_HEADINGS,
         source_inputs=selection.inputs,
     )
-    updated_playbook = replace_generated_region(existing_playbook, validated_aggregate)
+    aggregate_sections = split_heading_sections(validated_aggregate, AGGREGATE_HEADINGS)
+    section_for_key = {
+        "common": aggregate_sections["## Common Style"],
+        "naver": aggregate_sections["## Naver Style"],
+        "velog": aggregate_sections["## Velog Style"],
+    }
+    updated_playbooks = {
+        key: replace_generated_region(
+            existing_playbooks[key],
+            _platform_generated(key, section_for_key[key]),
+        )
+        for key in PLAYBOOK_SPECS
+    }
     run_path = args.knowledge_dir / "runs" / f"{args.as_of.isoformat()}.md"
     run_document = _build_run_document(run_statistics, validated_aggregate)
 
-    atomic_write_text(run_path, run_document)
-    atomic_write_text(playbook_path, updated_playbook)
+    atomic_write_many(
+        {
+            run_path: run_document,
+            **{playbook_paths[key]: content for key, content in updated_playbooks.items()},
+        }
+    )
     return ExtractionRunResult(
-        playbook_path=playbook_path,
+        playbook_path=playbook_paths["common"],
+        naver_playbook_path=playbook_paths["naver"],
+        velog_playbook_path=playbook_paths["velog"],
         run_path=run_path,
         unique_inputs=len(selection.inputs),
         batches_completed=len(batch_outputs),
@@ -376,13 +487,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"duplicates_removed: {result.duplicates_removed}")
     print(f"batches_completed: {result.batches_completed}")
     print(f"playbook_path: {result.playbook_path}")
+    print(f"naver_playbook_path: {result.naver_playbook_path}")
+    print(f"velog_playbook_path: {result.velog_playbook_path}")
     print(f"run_path: {result.run_path}")
     return 0
 
 
 def parse_cli_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Extract abstract style patterns from recent ranked Naver blog targets."
+        description="Extract common, Naver, and Velog style patterns from recent ranked targets."
     )
     parser.add_argument("--as-of", default=now_kst().date().isoformat())
     parser.add_argument("--days", type=int, default=7)
@@ -488,8 +601,12 @@ def _successful_bodies_by_url(path: Path) -> dict[str, str]:
 
 
 def _style_input(target: dict[str, Any], *, date_value: str, body_text: str) -> StyleInput:
+    source = str(target.get("source") or "naver").lower()
+    if source not in {"naver", "velog"}:
+        source = "naver"
     return StyleInput(
         date=date_value,
+        source=source,
         rank_position=_rank_position(target),
         canonical_url=_canonical_url(target),
         title_clean=str(target.get("title_clean") or ""),
@@ -595,6 +712,10 @@ def _contains_token_overlap(normalized_output: str, normalized_source: str) -> b
 
 def _run_statistics(args: argparse.Namespace, selection: SelectionResult) -> dict[str, object]:
     date_window = build_date_window(args.as_of, days=args.days)
+    source_counts = {
+        source: sum(1 for item in selection.inputs if item.source == source)
+        for source in ("naver", "velog")
+    }
     return {
         "as_of": args.as_of.isoformat(),
         "window_start": date_window[0],
@@ -603,6 +724,7 @@ def _run_statistics(args: argparse.Namespace, selection: SelectionResult) -> dic
         "top_per_day": args.top_per_day,
         "maximum_inputs": args.days * args.top_per_day,
         "unique_inputs": len(selection.inputs),
+        "source_counts": source_counts,
         "duplicates_removed": selection.duplicates_removed,
         "daily": [asdict(item) for item in selection.stats],
     }
@@ -619,6 +741,8 @@ def _build_run_document(statistics: Mapping[str, object], aggregate_output: str)
         f"- top_per_day: {statistics['top_per_day']}",
         f"- maximum_inputs: {statistics['maximum_inputs']}",
         f"- unique_inputs: {statistics['unique_inputs']}",
+        f"- naver_inputs: {statistics['source_counts']['naver']}",
+        f"- velog_inputs: {statistics['source_counts']['velog']}",
         f"- duplicates_removed: {statistics['duplicates_removed']}",
         "",
         "## Daily Input Summary",

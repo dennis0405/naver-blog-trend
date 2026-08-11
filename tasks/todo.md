@@ -17,7 +17,7 @@ Source of truth: `specs/naver_velog_dual_editorial_pipeline.md`
   - Verify: focused ranking tests, SQLite/report integration, then full suite
   - Files: scoring config, rankers, reports, tests
 
-- [ ] Task 3: Extract common and platform-specific playbooks
+- [x] Task 3: Extract common and platform-specific playbooks
   - Acceptance: one run atomically updates common, Naver and Velog generated rules
   - Verify: fake-Codex integration tests and extract-style skill validation
   - Files: extraction script, prompts, knowledge templates, skill, tests

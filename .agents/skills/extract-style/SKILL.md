@@ -1,6 +1,6 @@
 ---
 name: extract-style
-description: Run and verify this repository's rolling Naver Blog style extraction workflow with scripts/extract_style_local.py. Use when the user invokes extract-style, asks to extract or refresh the seven-day style playbook, analyze collected reference targets for writing patterns, preflight a style-extraction run, or inspect its outputs. Do not use for daily collection, candidate ranking, draft rewriting, or publishing.
+description: Run and verify this repository's rolling Naver and Velog style extraction workflow with scripts/extract_style_local.py. Use when the user invokes extract-style, asks to extract or refresh the seven-day common and platform playbooks, analyze collected reference targets for writing patterns, preflight a style-extraction run, or inspect its outputs. Do not use for daily collection, candidate ranking, draft rewriting, or publishing.
 ---
 
 # Extract Style
@@ -15,6 +15,8 @@ Use the repository's existing extractor as the only implementation. Do not dupli
    - `prompts/extract_style.md`
    - `prompts/aggregate_style_playbook.md`
    - `knowledge/style/style_playbook.md`
+   - `knowledge/style/platforms/naver.md`
+   - `knowledge/style/platforms/velog.md`
 3. Treat `scripts/extract_style_local.py --help` and the live script source as authoritative when this skill and the implementation differ.
 4. Preserve unrelated working-tree changes. Do not modify collection, ranking, prompt, raw, or derived files.
 5. Never commit or push extraction results unless the user explicitly asks.
@@ -60,7 +62,7 @@ python3 scripts/extract_style_local.py --as-of YYYY-MM-DD
 
 - Replace `YYYY-MM-DD` with the resolved final date.
 - Do not pass `--model` unless the user explicitly requests a model.
-- Keep the extractor's read-only sandbox, disabled shell tools, environment allowlist, validation, and atomic-write behavior unchanged.
+- Keep the extractor's read-only sandbox, disabled shell tools, environment allowlist, validation, and all-or-nothing multi-file write behavior unchanged.
 - Provide a brief progress update when the command remains active for more than about one minute.
 - On failure, report the exact high-level error and diagnose it. Do not patch the extractor, prompts, playbook markers, or input data unless the user separately asks for a fix.
 
@@ -70,8 +72,11 @@ After a successful run:
 
 1. Capture the command's `unique_inputs`, `duplicates_removed`, `batches_completed`, `playbook_path`, and `run_path` output.
 2. Verify that the run report exists at `knowledge/style/runs/{date}.md`.
-3. Verify that `knowledge/style/style_playbook.md` contains exactly one generated marker pair and no longer contains the initial placeholder.
-4. Inspect the generated playbook abstractly for required sections, observation counts, confidence labels, and practical editing rules. Do not reproduce source text.
+3. Verify that all three playbooks contain exactly one generated marker pair and no longer contain the initial placeholder:
+   - `knowledge/style/style_playbook.md`
+   - `knowledge/style/platforms/naver.md`
+   - `knowledge/style/platforms/velog.md`
+4. Inspect the common, Naver, and Velog rules abstractly for observation counts, confidence labels, practical editing rules, and source separation. Do not reproduce source text.
 5. Run `git diff --check` and show the scoped knowledge-file changes with `git status --short`.
 6. Compare against the preflight status and confirm that raw and derived inputs were not modified by the extraction command.
 

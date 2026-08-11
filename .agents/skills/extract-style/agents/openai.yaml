@@ -1,4 +1,4 @@
 interface:
   display_name: "Extract Style"
-  short_description: "Extract a rolling Naver blog style playbook"
-  default_prompt: "Use $extract-style to extract and review the latest seven-day Naver blog style playbook."
+  short_description: "Extract common, Naver, and Velog style playbooks"
+  default_prompt: "Use $extract-style to extract and review the latest seven-day common, Naver, and Velog style playbooks."
