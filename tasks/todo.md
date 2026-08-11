@@ -12,7 +12,7 @@ Source of truth: `specs/naver_velog_dual_editorial_pipeline.md`
   - Verify: focused parser and collector tests, then full suite
   - Files: client, collector, body fetcher, tests
 
-- [ ] Task 2: Rank and select source-balanced style references
+- [x] Task 2: Rank and select source-balanced style references
   - Acceptance: source-specific scores, style gate, 15:15 quotas and round-robin ordering work
   - Verify: focused ranking tests, SQLite/report integration, then full suite
   - Files: scoring config, rankers, reports, tests

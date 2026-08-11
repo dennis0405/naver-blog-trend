@@ -1,10 +1,18 @@
 weights:
-  search_rank_score: 0.35
-  trend_score: 0.20
-  recency_score: 0.15
-  tech_relevance_score: 0.15
-  source_repeat_score: 0.10
-  novelty_score: 0.05
+  naver:
+    rank_score: 0.35
+    popularity_score: 0.20
+    recency_score: 0.15
+    tech_relevance_score: 0.15
+    source_repeat_score: 0.10
+    novelty_score: 0.05
+  velog:
+    rank_score: 0.25
+    popularity_score: 0.20
+    recency_score: 0.15
+    tech_relevance_score: 0.20
+    source_repeat_score: 0.10
+    novelty_score: 0.10
 
 dedup:
   canonicalize_url: true
@@ -16,4 +24,7 @@ recency:
 ranking:
   top_n_daily_report: 30
   top_n_weekly_playbook: 100
-
+  min_style_quality: 0.30
+  source_quotas:
+    naver: 15
+    velog: 15

@@ -22,18 +22,23 @@ def write_daily_collection_report(
     raw_date = Path(raw_dir) / date_value
     search_path = raw_date / "naver_search.jsonl"
     trend_path = raw_date / "naver_trend.jsonl"
+    velog_path = raw_date / "velog_posts.jsonl"
     bodies_path = raw_date / "blog_bodies.jsonl"
     manifest_path = raw_date / "body_manifest.json"
 
     search_records = list(read_jsonl(search_path))
     trend_records = list(read_jsonl(trend_path))
+    velog_records = list(read_jsonl(velog_path))
     body_records = list(read_jsonl(bodies_path))
     ranked_candidates = _read_ranked_candidates(derived_dir, date_value, limit=30)
     reference_targets = _read_reference_targets(derived_dir, date_value, limit=30)
     ranked_candidate_count = _count_derived_rows(derived_dir, "candidates", date_value)
     reference_target_count = _count_derived_rows(derived_dir, "reference_targets", date_value)
 
-    unique_links = {record.get("canonical_url") or record.get("link") for record in search_records}
+    unique_links = {
+        record.get("canonical_url") or record.get("link")
+        for record in [*search_records, *velog_records]
+    }
     discovery_queries = {
         record.get("query") for record in search_records if record.get("search_layer") == "discovery"
     }
@@ -47,13 +52,15 @@ def write_daily_collection_report(
     deleted_derived_dirs = deleted_derived_dirs or []
     deleted_derived_rows = deleted_derived_rows or {}
     lines = [
-        f"# Daily Naver Tech Blog Signal Report - {date_value}",
+        f"# Daily Naver and Velog Tech Blog Signal Report - {date_value}",
         "",
         "## Summary",
         f"- collected_queries: {len(all_queries)}",
         f"- discovery_queries: {len(discovery_queries)}",
         f"- target_queries: {len(target_queries)}",
-        f"- total_candidates: {len(search_records)}",
+        f"- total_candidates: {len(search_records) + len(velog_records)}",
+        f"- naver_candidates: {len(search_records)}",
+        f"- velog_candidates: {len(velog_records)}",
         f"- unique_candidates: {len(unique_links)}",
         f"- body_fetch_candidates: {len(body_records)}",
         f"- ranked_candidates: {ranked_candidate_count}",
@@ -66,26 +73,31 @@ def write_daily_collection_report(
         "",
         "## Top Candidates",
         "",
-        "| score | layer | query | rank | title | blogger | postdate | link |",
-        "|---:|---|---|---:|---|---|---|---|",
+        "| score | source | channel | query | rank | title | author | postdate | link |",
+        "|---:|---|---|---|---:|---|---|---|---|",
     ]
     if ranked_candidates:
         for record in ranked_candidates:
             lines.append(
-                "| {score:.3f} | {layer} | {query} | {rank} | {title} | {blogger} | {postdate} | {link} |".format(
+                "| {score:.3f} | {source} | {channel} | {query} | {rank} | {title} | {author} | {postdate} | {link} |".format(
                     score=float(record.get("total_score") or 0),
-                    layer=record.get("search_layer", ""),
+                    source=record.get("source", ""),
+                    channel=record.get("discovery_channel", ""),
                     query=_escape_table(record.get("query", "")),
                     rank=record.get("best_rank", ""),
                     title=_escape_table(record.get("title_clean", "")),
-                    blogger=_escape_table(record.get("blogger_name", "")),
+                    author=_escape_table(record.get("author_name", "")),
                     postdate=record.get("postdate", ""),
                     link=record.get("canonical_url", ""),
                 )
             )
     else:
+        fallback_records = [
+            *({**record, "source": "naver"} for record in search_records),
+            *velog_records,
+        ]
         for record in sorted(
-            search_records,
+            fallback_records,
             key=lambda item: (
                 str(item.get("search_layer", "")),
                 str(item.get("query", "")),
@@ -93,12 +105,15 @@ def write_daily_collection_report(
             ),
         )[:30]:
             lines.append(
-                "| - | {layer} | {query} | {rank} | {title} | {blogger} | {postdate} | {link} |".format(
-                    layer=record.get("search_layer", ""),
+                "| - | {source} | {channel} | {query} | {rank} | {title} | {author} | {postdate} | {link} |".format(
+                    source=record.get("source", "naver"),
+                    channel=record.get("discovery_channel", record.get("search_layer", "")),
                     query=_escape_table(record.get("query", "")),
                     rank=record.get("rank", ""),
                     title=_escape_table(record.get("title_clean", "")),
-                    blogger=_escape_table(record.get("blogger_name", "")),
+                    author=_escape_table(
+                        record.get("author_name", record.get("blogger_name", ""))
+                    ),
                     postdate=record.get("postdate", ""),
                     link=record.get("link", ""),
                 )
@@ -110,16 +125,17 @@ def write_daily_collection_report(
                 "",
                 "## Reference Targets",
                 "",
-                "| position | score | layer | query | title | reasons | body_status | link |",
-                "|---:|---:|---|---|---|---|---|---|",
+                "| position | score | source | channel | query | title | reasons | body_status | link |",
+                "|---:|---:|---|---|---|---|---|---|---|",
             ]
         )
         for target_record in reference_targets:
             lines.append(
-                "| {position} | {score:.3f} | {layer} | {query} | {title} | {reasons} | {body_status} | {link} |".format(
+                "| {position} | {score:.3f} | {source} | {channel} | {query} | {title} | {reasons} | {body_status} | {link} |".format(
                     position=target_record.get("rank_position", ""),
                     score=float(target_record.get("total_score") or 0),
-                    layer=target_record.get("search_layer", ""),
+                    source=target_record.get("source", ""),
+                    channel=target_record.get("discovery_channel", ""),
                     query=_escape_table(target_record.get("query", "")),
                     title=_escape_table(target_record.get("title_clean", "")),
                     reasons=_escape_table(", ".join(target_record.get("reason_codes", []))),
@@ -150,6 +166,7 @@ def write_daily_collection_report(
             f"- raw_dir: {raw_date}",
             f"- naver_search_jsonl: {search_path}",
             f"- naver_trend_jsonl: {trend_path}",
+            f"- velog_posts_jsonl: {velog_path}",
             f"- blog_bodies_jsonl: {bodies_path}",
             f"- body_manifest_json: {manifest_path}",
         ]
@@ -185,8 +202,8 @@ def _read_ranked_candidates(
             connection.row_factory = sqlite3.Row
             rows = connection.execute(
                 """
-                SELECT total_score, search_layer, query, best_rank, title_clean,
-                       blogger_name, postdate, canonical_url
+                SELECT total_score, source, discovery_channel, query, best_rank,
+                       title_clean, author_name, postdate, canonical_url
                 FROM candidates
                 WHERE date = ?
                 ORDER BY total_score DESC, best_rank ASC, canonical_url ASC
@@ -213,8 +230,8 @@ def _read_reference_targets(
             connection.row_factory = sqlite3.Row
             rows = connection.execute(
                 """
-                SELECT rank_position, total_score, search_layer, query, title_clean,
-                       reason_codes_json, body_status, canonical_url
+                SELECT rank_position, total_score, source, discovery_channel, query,
+                       title_clean, reason_codes_json, body_status, canonical_url
                 FROM reference_targets
                 WHERE date = ?
                 ORDER BY rank_position ASC
