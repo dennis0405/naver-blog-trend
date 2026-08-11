@@ -1,43 +1,34 @@
-# Naver·Velog Tech Blog Agent
+# Naver·Velog Tech Blog Pipeline
 
-개발 과정에서 직접 겪은 일을 초안으로 남기면, 네이버 블로그와 Velog에 올릴 수 있는 완성본으로 다듬어 주는 저장소다. 좋은 글의 형식을 익히기 위해 네이버 검색 결과와 Velog 인기 글을 매일 모으고, 최근 7일 표본에서 공통 규칙과 플랫폼별 차이를 추출한다.
+Naver·Velog Tech Blog Pipeline은 한국어 기술 블로그 제작을 지원하는 수집·분석·편집 자동화 프로젝트입니다. 네이버 블로그 검색 결과와 Velog 공개 인기 글을 정기적으로 수집하고, 선별한 글에서 플랫폼 공통 및 플랫폼별 작성 규칙을 추출합니다. 작성자가 제공한 Markdown 초안은 이 규칙을 바탕으로 검토한 뒤 Velog용 Markdown과 네이버 블로그용 평문으로 각각 생성합니다.
 
-자동화 범위는 공개 글 수집, 점수화, 참고 대상 선별, 7일 보존까지다. 스타일 추출과 초안 검토는 로컬 Codex 스킬로 실행한다. 어느 플랫폼에도 글을 자동으로 올리지는 않는다.
+이 프로젝트는 참고 글의 원문을 재사용하거나 게시를 자동화하지 않습니다. 외부 글은 형식적 특징을 분석하는 데만 사용하며, 최종 콘텐츠의 사실과 경험은 사용자가 작성한 초안을 유일한 출처로 삼습니다.
 
-## 핵심 흐름
+## 주요 기능
 
-```mermaid
-flowchart TD
-    A[GitHub Actions<br/>매일 08:00 KST] --> B[Naver 검색·DataLab 수집]
-    A --> C[Velog 트렌딩·추천 수집]
-    B --> D[공개 본문 수집]
-    C --> D
-    D --> E[소스별 점수화]
-    E --> F[스타일 품질 gate]
-    F --> G[Naver 15 + Velog 15<br/>번갈아 선별]
-    G --> H[7일 보존·자동 commit]
-    H --> I[$extract-style]
-    I --> J[공통·Naver·Velog 플레이북]
-    J --> K[posts/drafts에 경험 초안 작성]
-    K --> L[$review-draft 초안명]
-    L --> M[post.velog.md]
-    L --> N[post.naver.txt]
-    L --> O[quality_report.md]
-    M --> P[사람이 검토 후 직접 게시]
-    N --> P
-```
+- 네이버 블로그 검색 API와 DataLab을 이용한 기술 글 후보 수집
+- Velog 트렌딩·추천 탭의 공개 글 수집
+- 플랫폼별 순위·인기·최신성·기술 관련성 점수 계산
+- 스타일 품질 기준과 Naver 15개·Velog 15개 쿼터를 적용한 참고 대상 선별
+- 최근 7일 표본에서 공통·Naver·Velog 스타일 플레이북 추출
+- 하나의 초안에서 Velog Markdown과 Naver 게시용 평문을 독립적으로 생성
+- 플랫폼별 `humanize-korean` 윤문과 보호 사실 일치 검사
+- GitHub Actions 기반 일일 수집, 결과 커밋 및 7일 보존
 
-| 구간 | 실행 위치 | 방식 | 산출물 |
-|---|---|---|---|
-| Naver·Velog 수집 | GitHub Actions 또는 로컬 | 매일 자동 / 필요 시 수동 | `raw/{date}/` |
-| 점수화·참고 대상 선별 | GitHub Actions 또는 로컬 | 수집 직후 | `data/derived/`, `data/reports/daily/` |
-| 보존 기간 정리 | GitHub Actions 또는 로컬 | 수집 직후 | 최근 7일 데이터 |
-| 스타일 추출 | 로컬 Codex | 사용자가 실행 | 공통·플랫폼별 플레이북 |
-| 초안 작성 | 로컬 | 사용자가 작성 | `posts/drafts/` |
-| 초안 검토·윤문 | 로컬 Codex | 사용자가 실행 | Velog·Naver 완성본과 품질 보고서 |
-| 발행 | Naver·Velog | 사람이 직접 수행 | 게시글 |
+## 사용 범위
 
-## 요구사항과 처음 설정
+이 프로젝트는 다음과 같은 작업에 사용할 수 있습니다.
+
+1. 한국어 기술 블로그의 최신 작성 형식과 플랫폼별 차이를 정기적으로 분석합니다.
+2. 직접 작성한 트러블슈팅·프로젝트 회고 초안을 게시 가능한 글로 다듬습니다.
+3. 같은 내용을 네이버 블로그와 Velog의 게시 형식에 맞춰 각각 준비합니다.
+4. 초안의 사실, 날짜, 수치, 코드, URL이 두 완성본에서 일치하는지 검증합니다.
+
+자동 게시와 외부 사실 검증은 지원하지 않습니다. 최종 검토와 게시 여부는 사용자가 결정합니다.
+
+## 빠른 시작
+
+### 요구사항
 
 - Python 3.12 이상
 - Naver Developers 애플리케이션의 Client ID와 Client Secret
@@ -46,13 +37,19 @@ flowchart TD
 
 Velog는 로그인하지 않고 공개된 트렌딩·추천 페이지를 읽는다. 별도 계정이나 브라우저 자동화는 필요하지 않다.
 
-저장소를 내려받은 뒤 가상환경을 준비한다.
+### 설치
+
+저장소를 복제하고 가상환경을 준비한다.
 
 ```bash
+git clone https://github.com/dennis0405/naver-blog-trend.git
+cd naver-blog-trend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### 로컬 환경 변수
 
 저장소 루트에 `.env`를 만들거나 같은 값을 환경 변수로 내보낸다.
 
@@ -74,7 +71,50 @@ NAVER_CLIENT_SECRET=replace_me
 
 Velog 공개 페이지 수집에는 secret이 필요하지 않다. 위 세 값이 없거나 이름이 다르면 Naver 수집 단계가 실패한다.
 
-## 매일 자동으로 실행되는 작업
+### 기본 사용 순서
+
+1. GitHub Actions의 `Daily Blog Pipeline`을 실행하거나 로컬 수집 명령을 사용해 참고 글을 수집한다.
+2. 7일치 참고 데이터가 준비되면 Codex에서 `$extract-style`을 실행한다.
+3. `posts/drafts/`에 경험과 기술적 근거를 담은 Markdown 초안을 작성한다.
+4. `$review-draft {draft_name}`을 실행해 두 플랫폼의 완성본과 품질 보고서를 생성한다.
+5. `quality_report.md`와 각 완성본을 검토한 뒤 플랫폼에 직접 게시한다.
+
+세부 명령과 파일 형식은 아래의 각 단계에서 설명한다.
+
+## 아키텍처 개요
+
+```mermaid
+flowchart TD
+    A[GitHub Actions<br/>매일 08:00 KST] --> B[Naver 검색·DataLab 수집]
+    A --> C[Velog 트렌딩·추천 수집]
+    B --> D[공개 본문 수집]
+    C --> D
+    D --> E[소스별 점수화]
+    E --> F[스타일 품질 기준 적용]
+    F --> G[Naver 15 + Velog 15<br/>번갈아 선별]
+    G --> H[7일 보존·자동 commit]
+    H --> I[$extract-style]
+    I --> J[공통·Naver·Velog 플레이북]
+    J --> K[posts/drafts에 초안 작성]
+    K --> L[$review-draft 초안명]
+    L --> M[post.velog.md]
+    L --> N[post.naver.txt]
+    L --> O[quality_report.md]
+    M --> P[사람이 검토 후 직접 게시]
+    N --> P
+```
+
+| 구간 | 실행 위치 | 방식 | 산출물 |
+|---|---|---|---|
+| Naver·Velog 수집 | GitHub Actions 또는 로컬 | 매일 자동 / 필요 시 수동 | `raw/{date}/` |
+| 점수화·참고 대상 선별 | GitHub Actions 또는 로컬 | 수집 직후 | `data/derived/`, `data/reports/daily/` |
+| 보존 기간 정리 | GitHub Actions 또는 로컬 | 수집 직후 | 최근 7일 데이터 |
+| 스타일 추출 | 로컬 Codex | 사용자가 실행 | 공통·플랫폼별 플레이북 |
+| 초안 작성 | 로컬 | 사용자가 작성 | `posts/drafts/` |
+| 초안 검토·윤문 | 로컬 Codex | 사용자가 실행 | Velog·Naver 완성본과 품질 보고서 |
+| 발행 | Naver·Velog | 사람이 직접 수행 | 게시글 |
+
+## 수집 및 선별 파이프라인
 
 `.github/workflows/daily_collect.yml`은 매일 `23:00 UTC`, 한국 시간으로 다음 날 `08:00 KST`에 시작한다. Actions 화면의 `workflow_dispatch`로 직접 실행할 수도 있다.
 
@@ -184,7 +224,7 @@ chore: daily naver and velog blog pipeline
 
 플레이북, 초안, 완성본은 자동 커밋 대상이 아니다.
 
-## 로컬에서 수집 파이프라인 실행하기
+## 로컬 실행
 
 특정 날짜를 다시 처리할 때는 모든 명령에 같은 날짜를 넘긴다.
 
@@ -206,7 +246,7 @@ python3 -m src.maintenance.prune_raw_data \
 
 같은 날짜를 다시 실행하면 그날의 JSONL과 SQLite 행을 새로 만든다. raw는 그대로 두고 점수만 다시 계산하려면 `scripts/rank_targets_local.sh {date}`만 실행한다.
 
-## 최근 7일의 스타일 추출하기
+## 스타일 플레이북 생성
 
 GitHub Actions가 올린 최신 데이터를 받은 뒤 저장소 로컬 스킬을 실행한다.
 
@@ -243,7 +283,7 @@ knowledge/style/runs/{as_of_date}.md
 
 `style_playbook.md`는 두 플랫폼에 공통으로 적용할 구조와 편집 원칙을 담는다. 플랫폼별 파일은 서식과 읽기 흐름의 차이를 보완한다. `## Human Rules`와 자동 생성 영역 표시 바깥의 내용은 건드리지 않는다.
 
-## 초안 작성하기
+## 초안 준비
 
 `posts/drafts/` 아래에 경험과 근거를 담은 Markdown 파일을 만든다.
 
@@ -271,7 +311,7 @@ status: "draft"
 
 초안에는 직접 겪었거나 확인한 내용만 쓴다. 결과, 원인, 수치가 확실하지 않으면 그 사실도 초안에 표시한다. 실제 token, private key, 내부 host, IP, 개인 이메일, 사용자 데이터는 넣지 않는다.
 
-## Naver·Velog 완성본 만들기
+## 플랫폼별 완성본 생성
 
 파일 stem을 `review-draft`에 넘긴다. 축약한 이름을 쓸 때는 하나의 초안만 가리켜야 한다.
 
@@ -306,7 +346,7 @@ posts/final/{draft_stem}/quality_report.md
 
 원본 초안은 수정하지 않는다. 기존 final 디렉터리도 명시적인 교체 요청 없이는 덮어쓰지 않는다. commit, push, 게시 역시 자동으로 하지 않는다.
 
-## 평소 운영 순서
+## 권장 운영 절차
 
 1. daily workflow가 성공했는지 확인한다.
 2. `data/reports/daily/{date}.md`에서 소스별 수집 수와 참고 대상 수를 확인한다.
@@ -376,7 +416,7 @@ posts/final/{draft_stem}/quality_report.md
 
 스타일 추출의 `--days × --top-per-day` 최대값은 35다. 범위를 키우거나 스타일 추출을 GitHub Actions에서 실행하려면 모델 호출 비용과 데이터 경계를 다시 검토해야 한다.
 
-## 현재 한계
+## 제한 사항
 
 - Naver는 Developers API provider만 지원한다.
 - 공개 HTML에서 읽을 수 없는 본문은 수집하지 못한다.
